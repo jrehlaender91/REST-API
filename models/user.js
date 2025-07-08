@@ -65,10 +65,7 @@ module.exports = (sequelize) => {
         }
       }
     }
-  }, { 
-    sequelize,
-    timestamps: false
-  });
+  }, { sequelize });
 
   // Define associations 
   User.associate = (models) => {

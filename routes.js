@@ -38,7 +38,7 @@ router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
 router.post('/users', asyncHandler(async (req, res) => {
     try {
         await User.create(req.body);
-        res.status(201).json({ "message": "Account successfully created!" });
+        res.status(201).setHeader('Location', '/api/users/').end();
     } catch (error) {
         console.log('ERROR: ', error.name);
 
@@ -77,15 +77,18 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 // /api/courses - POST: Create a new course, set the Location header to the URI for the newly created course, and return a 201 HTTP status code and no content.
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
-    if (req.body.title && req.body.description && req.body.estimatedTime && req.body.materialsNeeded) {
-        await Course.create(req.body);
-        res.status(201).json();
-        // Set the Location header to the URI for the newly created course
-        res.setHeader('Location', '/api/courses/' + req.body.id);
-        // Alternatively, you can use the following line if you want to include the course ID in 
-        res.location('/api/courses/' + req.body.id);
-    } else {
-        res.status(400).json({ message: 'Missing field required' });
+    try {
+        const newCourse = await Course.create(req.body);
+        res.status(201).setHeader('Location', '/api/courses/' + newCourse.id).end();
+    } catch (error) {
+        console.log('ERROR: ', error.name);
+
+        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors });
+        } else {
+            throw error;
+        }
     }
 }));
 
