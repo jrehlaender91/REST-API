@@ -75,13 +75,10 @@ module.exports = (sequelize) => {
     User.hasMany(models.Course, {
       foreignKey: {
         fieldName: 'userId',
-        allowNull: false
-      }
+        allowNull: false,
+      },
     });
   };
 
   return User;
 };
-
-/* Set up the foreignKey property with the name userId, 
-and set it equal to the id from the Users table. */

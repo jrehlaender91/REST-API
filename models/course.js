@@ -7,10 +7,54 @@ const { Model, DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   class Course extends Sequelize.Model { }
   Course.init({
-    title: DataTypes.STRING,
-    description: DataTypes.TEXT,
-    estimatedTime: DataTypes.STRING,
-    materialsNeeded: DataTypes.STRING
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: 'Please provide a title.'
+        },
+        notNull: {
+          msg: 'Please provide a title.'
+        }
+      }
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: 'Please provide a description.'
+        },
+        notNull: {
+          msg: 'Please provide a description.'
+        }
+      }
+    },
+    estimatedTime: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: 'Please provide an estimated time.'
+        },
+        notNull: {
+          msg: 'Please provide an estimated time.'
+        }
+      }
+    },
+    materialsNeeded: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: {
+          msg: 'Please provide materials needed.'
+        },
+        notNull: {
+          msg: 'Please provide materials needed.'
+        }
+      }
+    },
   }, { sequelize });
 
   // Define associations 
@@ -18,13 +62,10 @@ module.exports = (sequelize) => {
     Course.belongsTo(models.User, {
       foreignKey: {
         fieldName: 'userId',
-        allowNull: false
-      }
+        allowNull: false,
+      },
     });
   };
 
   return Course;
 };
-
-/* Set up the foreignKey property with the name userId, 
-and set it equal to the id from the Users table. */
