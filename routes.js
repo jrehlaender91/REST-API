@@ -137,12 +137,24 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
 
 // /api/courses/:id - DELETE: Delete the corresponding course and return a 204 HTTP status code and no content.
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
-    if (course) {
-        await course.destroy();
-        res.status(204).json();
+    const user = req.currentUser;
+
+    const course = await Course.findByPk(req.params.id, {
+        include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName', 'emailAddress'],
+        }],
+    });
+    if (user.emailAddress !== course.user.emailAddress) {
+        return res.status(403).json();
     } else {
-        res.status(404).json({ message: 'Course not found' });
+        if (course) {
+            await course.destroy();
+            res.status(204).json();
+        } else {
+            res.status(404).json({ message: 'Course not found' });
+        }
     }
 }));
 
