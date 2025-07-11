@@ -33,33 +33,16 @@ module.exports = (sequelize) => {
     },
     estimatedTime: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Please provide an estimated time.'
-        },
-        notNull: {
-          msg: 'Please provide an estimated time.'
-        }
-      }
     },
     materialsNeeded: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Please provide materials needed.'
-        },
-        notNull: {
-          msg: 'Please provide materials needed.'
-        }
-      }
     },
   }, { sequelize });
 
   // Define associations 
   Course.associate = (models) => {
     Course.belongsTo(models.User, {
+      as: 'user',
       foreignKey: {
         fieldName: 'userId',
         allowNull: false,

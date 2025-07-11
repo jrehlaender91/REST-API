@@ -6,6 +6,7 @@ const router = express.Router();
 const User = require('./models').User;
 const Course = require('./models').Course;
 const bcrypt = require('bcrypt');
+const { sequelize, models } = require('./models');
 
 
 function asyncHandler(cb) {
@@ -38,7 +39,7 @@ router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
 router.post('/users', asyncHandler(async (req, res) => {
     try {
         await User.create(req.body);
-        res.status(201).setHeader('Location', '/api/users/').end();
+        res.status(201).setHeader('Location', '/').end();
     } catch (error) {
         console.log('ERROR: ', error.name);
 
@@ -54,6 +55,11 @@ router.post('/users', asyncHandler(async (req, res) => {
 // /api/courses - GET: Return all courses including the User object associated with each course and a 200 HTTP status code.
 router.get('/courses', asyncHandler(async (req, res) => {
     const courses = await Course.findAll({
+        include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName', 'emailAddress'],
+        }],
         attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId'],
     });
     res.json(courses);
@@ -63,6 +69,11 @@ router.get('/courses', asyncHandler(async (req, res) => {
 // /api/courses/:id - GET: Return the corresponding course including the User object associated with that course and a 200 HTTP status code.
 router.get('/courses/:id', asyncHandler(async (req, res) => {
     const course = await Course.findAll({
+        include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName', 'emailAddress'],
+        }],
         where: { id: req.params.id },
         attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId'],
     });
@@ -95,17 +106,24 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 // /api/courses/:id - PUT: Update the corresponding course and return a 204 HTTP status code and no content.
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const course = await Course.findByPk(req.params.id);
+    
     if (course) {
-        if (req.body.title && req.body.description && req.body.estimatedTime && req.body.materialsNeeded) {
+        try {
             await course.update(req.body);
             res.status(204).json();
-        } else {
-            res.status(400).json({ message: 'Missing field required' });
+        } catch (error) {
+            console.log('ERROR: ', error.name);
+
+            if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+                const errors = error.errors.map(err => err.message);
+                res.status(400).json({ errors });
+            } else {
+                throw error;
+            }
         }
-    } else {
-        res.status(404).json({ message: 'Course not found' });
     }
 }));
+
 
 // /api/courses/:id - DELETE: Delete the corresponding course and return a 204 HTTP status code and no content.
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
