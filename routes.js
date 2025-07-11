@@ -105,25 +105,35 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 
 // /api/courses/:id - PUT: Update the corresponding course and return a 204 HTTP status code and no content.
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
-    
-    if (course) {
-        try {
-            await course.update(req.body);
-            res.status(204).json();
-        } catch (error) {
-            console.log('ERROR: ', error.name);
+    const user = req.currentUser;
 
-            if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-                const errors = error.errors.map(err => err.message);
-                res.status(400).json({ errors });
-            } else {
-                throw error;
+    const course = await Course.findByPk(req.params.id, {
+        include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName', 'emailAddress'],
+        }],
+    });
+    if (user.emailAddress !== course.user.emailAddress) {
+        return res.status(403).json();
+    } else {
+        if (course) {
+            try {
+                await course.update(req.body);
+                res.status(204).json();
+            } catch (error) {
+                console.log('ERROR: ', error.name);
+
+                if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+                    const errors = error.errors.map(err => err.message);
+                    res.status(400).json({ errors });
+                } else {
+                    throw error;
+                }
             }
         }
     }
 }));
-
 
 // /api/courses/:id - DELETE: Delete the corresponding course and return a 204 HTTP status code and no content.
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
@@ -135,6 +145,5 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) =>
         res.status(404).json({ message: 'Course not found' });
     }
 }));
-
 
 module.exports = router;
